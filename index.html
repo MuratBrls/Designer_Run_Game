@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Designer Run - Mario Style Game</title>
+    <meta name="description" content="A Mario-style platformer game where you're a designer dodging revision-requesting clients and collecting SD cards!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <img src="logo.png" alt="Designer Run" class="game-logo" id="game-logo">
+            
+            <!-- Character Selection -->
+            <div class="char-select-container">
+                <h2 class="select-title">KARAKTERİNİ SEÇ</h2>
+                <div class="char-cards">
+                    <div class="char-card active" data-index="0">
+                        <div class="avatar-box"><canvas id="canvas-uiux" class="char-canvas" width="40" height="56"></canvas></div>
+                        <div class="char-name">UI/UX DESIGNER</div>
+                        <div class="char-desc">Dengeli ve klasik platform deneyimi.</div>
+                        <div class="char-stats">
+                            <span>HIZ: ⭐⭐⭐</span>
+                            <span>ZIP: ⭐⭐⭐</span>
+                            <span>CAN: ❤️❤️❤️</span>
+                        </div>
+                    </div>
+                    <div class="char-card" data-index="1">
+                        <div class="avatar-box"><canvas id="canvas-modeler" class="char-canvas" width="40" height="56"></canvas></div>
+                        <div class="char-name">3D MODELER</div>
+                        <div class="char-desc">Ağır zıplar ama dayanıklıdır. Sert düşüşü şok dalgası yaratır!</div>
+                        <div class="char-stats">
+                            <span>HIZ: ⭐⭐</span>
+                            <span>ZIP: ⭐⭐</span>
+                            <span>CAN: ❤️❤️❤️❤️</span>
+                        </div>
+                    </div>
+                    <div class="char-card" data-index="2">
+                        <div class="avatar-box"><canvas id="canvas-coder" class="char-canvas" width="40" height="56"></canvas></div>
+                        <div class="char-name">FRONTEND CODER</div>
+                        <div class="char-desc">Çok hızlıdır. SHIFT ile ileriye doğru kod atılımı (dash) yapar!</div>
+                        <div class="char-stats">
+                            <span>HIZ: ⭐⭐⭐⭐</span>
+                            <span>ZIP: ⭐⭐⭐</span>
+                            <span>CAN: ❤️❤️❤️</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="start-info">
+                <p class="blink-text">BAŞLAMAK İÇİN ENTER'A BAS</p>
+                <div class="controls-info">
+                    <span>⬅️➡️ / A-D Hareket</span>
+                    <span>⬆️ / SPACE Zıpla</span>
+                    <span>SHIFT Özel Yetenek</span>
+                </div>
+                <div class="start-highscore">🏆 EN YÜKSEK SKOR: <span id="start-highscore-value">0</span></div>
+            </div>
+
+            <!-- Skills / Power-ups Info Panel -->
+            <div class="skills-panel">
+                <div class="skills-title">⚡ GÜÇLER &amp; YETENEKLer</div>
+                <div class="skills-grid">
+                    <div class="skill-item">
+                        <span class="skill-icon">📷</span>
+                        <div class="skill-info">
+                            <div class="skill-name">KAMERA</div>
+                            <div class="skill-desc">Dokunduğun her şeyi yener &amp; ölümsüzsün! 12s</div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <span class="skill-icon">☕</span>
+                        <div class="skill-info">
+                            <div class="skill-name">KAHVE</div>
+                            <div class="skill-desc">Havada 2. zıplama yapabilirsin! 18s</div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <span class="skill-icon">🖱️</span>
+                        <div class="skill-info">
+                            <div class="skill-name">WACOM</div>
+                            <div class="skill-desc">Süper hız — rakipler sana yetişemez! 14s</div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <span class="skill-icon">🤖</span>
+                        <div class="skill-info">
+                            <div class="skill-name">YAPAY ZEKA</div>
+                            <div class="skill-desc">Drone seni takip eder, düşmanları ateşle hedefler! 30s</div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <span class="skill-icon">↩️</span>
+                        <div class="skill-info">
+                            <div class="skill-name">CTRL+Z (UNDO)</div>
+                            <div class="skill-desc">Bir öldürülmeyi geri alır — son güvenli noktana dönersin!</div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <span class="skill-icon">🌀</span>
+                        <div class="skill-info">
+                            <div class="skill-name">GİZLİ GEÇİT</div>
+                            <div class="skill-desc">S / ⬇ ile portala gir, süre dolmadan SD topla!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="credits">
+                <p>🎨 Müşteri revizelerinden kaç, SD kartları topla!</p>
+            </div>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div class="hud-left">
+                <div class="hud-item" id="hud-score">
+                    <span class="hud-label">SKOR</span>
+                    <span class="hud-value" id="score-value">0</span>
+                </div>
+                <div class="hud-item" id="hud-highscore">
+                    <span class="hud-label">REKOR</span>
+                    <span class="hud-value" id="highscore-value">0</span>
+                </div>
+                <div class="hud-item" id="hud-sdcards">
+                    <span class="hud-label">💾 SD</span>
+                    <span class="hud-value" id="sdcard-value">0</span>
+                </div>
+            </div>
+            
+            <div class="hud-center">
+                <div class="hud-item" id="hud-timer">
+                    <span class="hud-label">SÜRE</span>
+                    <span class="hud-value" id="timer-value">01:30</span>
+                </div>
+                <div class="hud-item" id="hud-ability">
+                    <span class="hud-label" id="ability-label">YETENEK</span>
+                    <span class="hud-value" id="ability-value" style="color: #00ff88;">HAZIR</span>
+                </div>
+                <div class="hud-item" id="hud-undoshield">
+                    <span class="hud-label">CTRL+Z</span>
+                    <span class="hud-value" id="undo-value" style="color: #ff33ff;">✔</span>
+                </div>
+            </div>
+
+            <div class="hud-right">
+                <div class="hud-item" id="hud-lives">
+                    <span class="hud-label">CAN</span>
+                    <span class="hud-value" id="lives-value">❤️❤️❤️</span>
+                </div>
+                <div class="hud-item" id="hud-level">
+                    <span class="hud-label">LEVEL</span>
+                    <span class="hud-value" id="level-value">1</span>
+                </div>
+                <div class="hud-item" id="hud-sound">
+                    <button id="sound-toggle" class="sound-button">🔊</button>
+                </div>
+                <div class="hud-item" id="hud-change-char">
+                    <button id="char-change-btn" class="sound-button" title="Karakter Seçimine Dön">👤</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Level Progress Bar -->
+        <div id="progress-container" class="hidden">
+            <div id="progress-track">
+                <div id="progress-fill"></div>
+                <span id="progress-icon">🏃</span>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+            <h1 class="gameover-title">GAME OVER</h1>
+            <p class="gameover-subtitle">Müşteriler kazandı! 😭</p>
+            <div class="final-score">
+                <p>Toplam Skor: <span id="final-score">0</span></p>
+                <p>Toplanan SD Kartlar: <span id="final-sdcards">0</span></p>
+                <p id="score-multiplier-msg" class="hidden" style="color: #00ff88;">SÜRE BONUSU: X<span id="score-multiplier-value">1</span></p>
+                <p id="new-highscore-msg" class="blink-text hidden" style="color: #ffcc00; font-size: 10px; margin-top: 10px;">🔥 YENİ REKOR! 🔥</p>
+                <p>En Yüksek Skor: <span id="gameover-highscore-value">0</span></p>
+            </div>
+            <p class="blink-text">TEKRAR OYNAMAK İÇİN ENTER'A BAS</p>
+        </div>
+
+        <!-- Level Complete Screen -->
+        <div id="levelcomplete-screen" class="screen hidden">
+            <h1 class="level-complete-title">LEVEL TAMAMLANDI! 🎉</h1>
+            <p class="level-subtitle">Revizelerden kurtuldun!</p>
+            <div class="level-stats">
+                <p>Skor: <span id="level-score">0</span></p>
+                <p>SD Kartlar: <span id="level-sdcards">0</span></p>
+            </div>
+            <p class="blink-text">DEVAM ETMEK İÇİN ENTER'A BAS</p>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>

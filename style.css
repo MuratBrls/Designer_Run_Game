@@ -1,0 +1,551 @@
+/* ============================================
+   DESIGNER RUN - GAME STYLES
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0a0a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'Press Start 2P', monospace;
+    padding: 12px;
+}
+
+#game-container {
+    position: relative;
+    /* Fill viewport but cap at a comfortable max so it's not overwhelming on large screens */
+    width: min(100vw - 24px, calc((100vh - 24px) * 1.5), 1440px);
+    height: min(100vh - 24px, calc((100vw - 24px) / 1.5), 960px);
+    border: 4px solid #6c3fa0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 
+        0 0 30px rgba(108, 63, 160, 0.5),
+        0 0 60px rgba(108, 63, 160, 0.2),
+        inset 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+#gameCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+/* ============================================
+   SCREENS (Start, GameOver, LevelComplete)
+   ============================================ */
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    background: rgba(10, 10, 26, 0.92);
+    backdrop-filter: blur(4px);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Start Screen */
+.game-logo {
+    width: 320px;
+    max-width: 80%;
+    margin-bottom: 12px;
+    animation: float 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(108, 63, 160, 0.6));
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.start-info {
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.blink-text {
+    color: #ffcc00;
+    font-size: 11px;
+    animation: blink 1s infinite;
+    text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+    margin-bottom: 8px;
+}
+
+@keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+}
+
+.controls-info {
+    display: flex;
+    gap: 30px;
+    color: #aaa;
+    font-size: 8px;
+    margin-top: 6px;
+}
+
+.credits {
+    text-align: center;
+    color: #8a6bc1;
+    font-size: 8px;
+    line-height: 2;
+}
+
+/* Game Over Screen */
+.gameover-title {
+    font-size: 48px;
+    color: #ff4444;
+    text-shadow: 
+        0 0 20px rgba(255, 68, 68, 0.8),
+        4px 4px 0 #800000;
+    margin-bottom: 15px;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.gameover-subtitle {
+    color: #ff8888;
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+.final-score, .level-stats {
+    background: rgba(108, 63, 160, 0.3);
+    border: 2px solid #6c3fa0;
+    border-radius: 8px;
+    padding: 20px 40px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.final-score p, .level-stats p {
+    color: #e0d0ff;
+    font-size: 12px;
+    line-height: 2.5;
+}
+
+.final-score span, .level-stats span {
+    color: #ffcc00;
+}
+
+/* Level Complete Screen */
+.level-complete-title {
+    font-size: 32px;
+    color: #44ff44;
+    text-shadow: 
+        0 0 20px rgba(68, 255, 68, 0.8),
+        3px 3px 0 #008800;
+    margin-bottom: 15px;
+    animation: pulse-green 1s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.level-subtitle {
+    color: #88ff88;
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+/* ============================================
+   HUD (Heads Up Display)
+   ============================================ */
+
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px;
+    z-index: 5;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%);
+}
+
+.hud-left, .hud-right {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.hud-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hud-label {
+    color: #8a6bc1;
+    font-size: 8px;
+    letter-spacing: 1px;
+}
+
+.hud-value {
+    color: #ffffff;
+    font-size: 11px;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    white-space: nowrap;
+    display: inline-block;
+}
+
+@keyframes hudPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.5); color: #ffeb3b; }
+    100% { transform: scale(1); }
+}
+
+@keyframes hudDamage {
+    0% { transform: scale(1); color: #ff0000; }
+    50% { transform: scale(1.2); color: #ff0000; }
+    100% { transform: scale(1); }
+}
+
+.hud-pop {
+    animation: hudPop 0.3s ease-out;
+}
+
+.hud-damage {
+    animation: hudDamage 0.3s ease-out;
+}
+
+/* Sound Button */
+.sound-button {
+    background: rgba(108, 63, 160, 0.4);
+    border: 2px solid #6c3fa0;
+    color: #fff;
+    font-size: 12px;
+    padding: 6px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    outline: none;
+    font-family: inherit;
+    line-height: 1;
+}
+.sound-button:hover {
+    background: #6c3fa0;
+    box-shadow: 0 0 10px rgba(108, 63, 160, 0.6);
+    transform: scale(1.05);
+}
+
+/* Start High Score */
+.start-highscore {
+    color: #ffcc00;
+    font-size: 10px;
+    margin-top: 15px;
+    text-shadow: 0 0 5px rgba(255, 204, 0, 0.4);
+}
+
+/* Level Progress Bar */
+#progress-container {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 320px;
+    height: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid #6c3fa0;
+    border-radius: 6px;
+    padding: 1px;
+    z-index: 5;
+    box-shadow: 0 0 10px rgba(108, 63, 160, 0.3);
+}
+#progress-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+}
+#progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(to right, #6c3fa0, #ff8800);
+    border-radius: 3px;
+    transition: width 0.1s linear;
+}
+#progress-icon {
+    position: absolute;
+    top: -9px;
+    left: 0%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    transition: left 0.1s linear;
+    filter: drop-shadow(0 0 4px #ff8800);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 980px) {
+    #game-container {
+        width: 100vw;
+        height: calc(100vw * 0.667);
+        max-height: 100vh;
+        border-radius: 0;
+        border: none;
+    }
+    
+    .game-logo {
+        width: 300px;
+    }
+    
+    .gameover-title {
+        font-size: 32px;
+    }
+    
+    .level-complete-title {
+        font-size: 24px;
+    }
+
+    .char-select-container {
+        width: 95%;
+    }
+
+    .char-card {
+        min-height: 140px;
+        padding: 6px;
+    }
+
+    .char-desc {
+        display: none;
+    }
+}
+
+/* ============================================
+   CHARACTER SELECTION & NEW UI ELEMENTS
+   ============================================ */
+
+.char-select-container {
+    width: 80%;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.select-title {
+    color: #b388ff;
+    font-size: 11px;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 8px rgba(179, 136, 255, 0.4);
+}
+
+.char-cards {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.char-card {
+    flex: 1;
+    background: rgba(15, 10, 30, 0.7);
+    border: 3px solid #3c1f60;
+    border-radius: 6px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    min-height: 130px;
+}
+
+.char-card:hover {
+    transform: translateY(-4px);
+    border-color: #8c52ff;
+    box-shadow: 0 0 12px rgba(140, 82, 255, 0.4);
+}
+
+.char-card.active {
+    background: rgba(45, 15, 75, 0.65);
+    border-color: #00f0ff;
+    box-shadow: 
+        0 0 15px rgba(0, 240, 255, 0.5),
+        inset 0 0 12px rgba(0, 240, 255, 0.15);
+    transform: scale(1.04);
+}
+
+.avatar-box {
+    width: 40px;
+    height: 56px;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.char-canvas {
+    display: block;
+    width: 40px;
+    height: 56px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.char-name {
+    font-size: 8px;
+    color: #ffffff;
+    margin-bottom: 6px;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.char-card.active .char-name {
+    color: #00f0ff;
+    text-shadow: 0 0 5px rgba(0, 240, 255, 0.5);
+}
+
+.char-desc {
+    font-size: 8px;
+    color: #b0a3c4;
+    line-height: 1.5;
+    text-align: center;
+    margin-bottom: 4px;
+    flex-grow: 1;
+}
+
+.char-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 8px;
+    color: #d1c4e9;
+    width: 100%;
+    align-items: flex-start;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 4px;
+}
+
+/* HUD Center Alignment */
+.hud-center {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============================================
+   SKILLS PANEL (Main Menu)
+   ============================================ */
+.skills-panel {
+    width: 82%;
+    margin-bottom: 8px;
+    background: rgba(10, 5, 25, 0.75);
+    border: 2px solid rgba(108, 63, 160, 0.6);
+    border-radius: 8px;
+    padding: 6px 12px;
+    backdrop-filter: blur(4px);
+}
+
+.skills-title {
+    color: #b388ff;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-align: center;
+    margin-bottom: 4px;
+    text-shadow: 0 0 8px rgba(179, 136, 255, 0.5);
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+}
+
+.skill-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    background: rgba(40, 10, 70, 0.5);
+    border: 1px solid rgba(140, 82, 255, 0.3);
+    border-radius: 6px;
+    padding: 4px 6px;
+    transition: border-color 0.2s;
+}
+
+.skill-item:hover {
+    border-color: #8c52ff;
+    background: rgba(60, 20, 100, 0.6);
+}
+
+.skill-icon {
+    font-size: 16px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.skill-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.skill-name {
+    font-size: 8px;
+    color: #00f0ff;
+    letter-spacing: 0.5px;
+    font-family: 'Press Start 2P', monospace;
+}
+
+.skill-desc {
+    font-size: 8px;
+    color: #c4b5d8;
+    line-height: 1.5;
+    font-family: 'Press Start 2P', monospace;
+}
+
+@keyframes timerCritical {
+    0% { color: #fff; text-shadow: 0 0 5px #ff4444; transform: scale(1); }
+    50% { color: #ff4444; text-shadow: 0 0 15px #ff4444; transform: scale(1.1); }
+    100% { color: #fff; text-shadow: 0 0 5px #ff4444; transform: scale(1); }
+}
+
+.hud-timer-critical {
+    animation: timerCritical 0.5s infinite;
+    color: #ff4444 !important;
+}
