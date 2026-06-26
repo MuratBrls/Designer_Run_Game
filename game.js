@@ -785,12 +785,14 @@ document.addEventListener('keydown', (e) => {
             sound.init();
             sound.play('coin');
             e.preventDefault();
+            return;
         } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
             selectedPauseIndex = (selectedPauseIndex + 1) % 4;
             updatePauseMenuUI();
             sound.init();
             sound.play('coin');
             e.preventDefault();
+            return;
         } else if (e.code === 'Enter') {
             const btnIds = ['btn-resume', 'btn-restart', 'btn-sound-pause', 'btn-mainmenu'];
             const activeBtn = document.getElementById(btnIds[selectedPauseIndex]);
@@ -798,6 +800,7 @@ document.addEventListener('keydown', (e) => {
                 activeBtn.click();
             }
             e.preventDefault();
+            return;
         }
     }
 
