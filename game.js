@@ -753,10 +753,30 @@ const sound = new SoundEngine();
 // ==========================================
 const keys = {};
 const justPressed = {};
+let adminModeActive = false;
+let secretBuffer = "";
 document.addEventListener('keydown', (e) => {
     if (e.repeat) return;
     if (!keys[e.code]) justPressed[e.code] = true;
     keys[e.code] = true;
+
+    // Secret sequence tracker for "1881" admin mode
+    if (!adminModeActive) {
+        if (e.key >= '0' && e.key <= '9') {
+            secretBuffer += e.key;
+            if (secretBuffer.length > 4) {
+                secretBuffer = secretBuffer.slice(-4);
+            }
+            if (secretBuffer === '1881') {
+                adminModeActive = true;
+                sound.init();
+                sound.play('levelup');
+                if (gameState === GameState.PLAYING || gameState === GameState.PAUSED) {
+                    spawnFloatingText(player ? player.x + player.width / 2 : canvas.width / 2, player ? player.y - 20 : canvas.height / 2, 'ADMIN MODU AKTİF!', '#ffcc00');
+                }
+            }
+        }
+    }
 
     // Character selection menu controls
     if (gameState === GameState.MENU) {
@@ -853,7 +873,7 @@ document.addEventListener('keydown', (e) => {
     }
 
     // --- CHEAT CODES (Numpad) ---
-    if ((gameState === GameState.PLAYING || gameState === GameState.PAUSED) && e.code.startsWith('Numpad')) {
+    if (adminModeActive && (gameState === GameState.PLAYING || gameState === GameState.PAUSED) && e.code.startsWith('Numpad')) {
         const num = parseInt(e.code.replace('Numpad', ''));
         if (num === 0) {
             // Numpad 0: Sınırsız Can ve Süre (Infinite Health & Time)
