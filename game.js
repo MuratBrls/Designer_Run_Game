@@ -138,6 +138,7 @@ const CHARACTERS = [
 ];
 
 let selectedCharIndex = 0;
+let selectedPauseIndex = 0;
 const playerSprites = { idle: [], run: [], jump: null, fall: null };
 const playerSpritesData = {
     uiux: { idle: [], run: [], jump: null, fall: null },
@@ -586,11 +587,26 @@ class SoundEngine {
     toggleSound() {
         this.init();
         this.bgmMuted = !this.bgmMuted;
-        const btn = document.getElementById('sound-toggle');
-        if (btn) {
-            btn.textContent = this.bgmMuted ? '🔇' : '🔊';
-            btn.blur();
+        const emoji = this.bgmMuted ? '🔇' : '🔊';
+        
+        const btnHud = document.getElementById('sound-toggle');
+        if (btnHud) {
+            btnHud.textContent = emoji;
+            btnHud.blur();
         }
+        
+        const btnMain = document.getElementById('btn-sound-main');
+        if (btnMain) {
+            btnMain.textContent = `${emoji} SES`;
+            btnMain.blur();
+        }
+        
+        const btnPause = document.getElementById('btn-sound-pause');
+        if (btnPause) {
+            btnPause.textContent = `${emoji} SES AÇ/KAPAT`;
+            btnPause.blur();
+        }
+
         if (!this.bgmMuted && !this.bgmPlaying && gameState === GameState.PLAYING) {
             this.startBGM();
         }
@@ -738,21 +754,50 @@ const sound = new SoundEngine();
 const keys = {};
 const justPressed = {};
 document.addEventListener('keydown', (e) => {
+    if (e.repeat) return;
     if (!keys[e.code]) justPressed[e.code] = true;
     keys[e.code] = true;
 
     // Character selection menu controls
-    if (gameState === GameState.MENU || gameState === GameState.SETTINGS) {
+    if (gameState === GameState.MENU) {
         if (isJustPressed('LEFT')) {
-            selectedCharIndex = (selectedCharIndex - 1 + CHARACTERS.length) % CHARACTERS.length;
-            updateCharacterSelectionUI();
-            sound.init();
-            sound.play('coin');
+            if (selectedCharIndex > 0) {
+                selectedCharIndex--;
+                updateCharacterSelectionUI();
+                sound.init();
+                sound.play('coin');
+            }
         } else if (isJustPressed('RIGHT')) {
-            selectedCharIndex = (selectedCharIndex + 1) % CHARACTERS.length;
-            updateCharacterSelectionUI();
+            if (selectedCharIndex < CHARACTERS.length - 1) {
+                selectedCharIndex++;
+                updateCharacterSelectionUI();
+                sound.init();
+                sound.play('coin');
+            }
+        }
+    }
+
+    // Pause Menu Navigation
+    if (gameState === GameState.PAUSED) {
+        if (e.code === 'ArrowUp' || e.code === 'KeyW') {
+            selectedPauseIndex = (selectedPauseIndex - 1 + 4) % 4;
+            updatePauseMenuUI();
             sound.init();
             sound.play('coin');
+            e.preventDefault();
+        } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+            selectedPauseIndex = (selectedPauseIndex + 1) % 4;
+            updatePauseMenuUI();
+            sound.init();
+            sound.play('coin');
+            e.preventDefault();
+        } else if (e.code === 'Enter') {
+            const btnIds = ['btn-resume', 'btn-restart', 'btn-sound-pause', 'btn-mainmenu'];
+            const activeBtn = document.getElementById(btnIds[selectedPauseIndex]);
+            if (activeBtn) {
+                activeBtn.click();
+            }
+            e.preventDefault();
         }
     }
 
@@ -769,9 +814,11 @@ document.addEventListener('keydown', (e) => {
     }
 
     // Pause Game
-    if (e.code === 'Escape') {
+    if (e.code === 'Escape' || e.code === 'KeyP') {
         if (gameState === GameState.PLAYING) {
             gameState = GameState.PAUSED;
+            selectedPauseIndex = 0;
+            updatePauseMenuUI();
             document.getElementById('pause-screen').classList.remove('hidden');
         } else if (gameState === GameState.PAUSED) {
             gameState = GameState.PLAYING;
@@ -1101,9 +1148,6 @@ class Player {
         if (this.grounded && Math.abs(this.vx) > 3 && Math.random() < 0.25) {
             spawnParticles(this.x + (this.vx > 0 ? 0 : this.width), this.y + this.height, 1, '#888', 'dust');
         }
-
-        // Clear justPressed
-        for (const k in justPressed) justPressed[k] = false;
     }
     triggerShockwave() {
         sound.play('spring'); // deep boom sound
@@ -4442,6 +4486,9 @@ function gameLoop(timestamp) {
         }
     }
 
+    // Clear justPressed at the end of the frame
+    for (const k in justPressed) justPressed[k] = false;
+
     ctx.restore();
     requestAnimationFrame(gameLoop);
 }
@@ -4453,6 +4500,24 @@ function updateCharacterSelectionUI() {
             card.classList.add('active');
         } else {
             card.classList.remove('active');
+        }
+    });
+}
+
+function updatePauseMenuUI() {
+    const btnIds = ['btn-resume', 'btn-restart', 'btn-sound-pause', 'btn-mainmenu'];
+    btnIds.forEach((id, idx) => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            if (idx === selectedPauseIndex) {
+                btn.style.border = '2px solid #00ffff';
+                btn.style.boxShadow = '0 0 10px #00ffff';
+                btn.style.background = 'linear-gradient(180deg, #582494 0%, #2d0e52 100%)';
+            } else {
+                btn.style.border = '';
+                btn.style.boxShadow = '';
+                btn.style.background = '';
+            }
         }
     });
 }
@@ -4500,8 +4565,8 @@ function closeSettings() {
 
 document.getElementById('btn-close-settings')?.addEventListener('click', closeSettings);
 
-document.getElementById('btn-sound-main')?.addEventListener('click', () => { sound.toggleMute(); });
-document.getElementById('btn-sound-pause')?.addEventListener('click', () => { sound.toggleMute(); });
+document.getElementById('btn-sound-main')?.addEventListener('click', () => { sound.toggleSound(); });
+document.getElementById('btn-sound-pause')?.addEventListener('click', () => { sound.toggleSound(); });
 
 document.getElementById('btn-resume')?.addEventListener('click', () => {
     gameState = GameState.PLAYING;
