@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Designer Run - Mario Style Game</title>
+    <title>Designer Run</title>
     <meta name="description" content="A Mario-style platformer game where you're a designer dodging revision-requesting clients and collecting SD cards!">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         
@@ -24,7 +25,7 @@
                     <div class="char-card active" data-index="0">
                         <div class="avatar-box"><canvas id="canvas-uiux" class="char-canvas" width="40" height="56"></canvas></div>
                         <div class="char-name">UI/UX DESIGNER</div>
-                        <div class="char-desc">Dengeli ve klasik platform deneyimi.</div>
+                        <div class="char-desc">Dengeli ve klasik platform.</div>
                         <div class="char-stats">
                             <span>HIZ: ⭐⭐⭐</span>
                             <span>ZIP: ⭐⭐⭐</span>
@@ -34,7 +35,7 @@
                     <div class="char-card" data-index="1">
                         <div class="avatar-box"><canvas id="canvas-modeler" class="char-canvas" width="40" height="56"></canvas></div>
                         <div class="char-name">3D MODELER</div>
-                        <div class="char-desc">Ağır zıplar ama dayanıklıdır. Sert düşüşü şok dalgası yaratır!</div>
+                        <div class="char-desc">Ağır ama dayanıklı. Şok dalgası!</div>
                         <div class="char-stats">
                             <span>HIZ: ⭐⭐</span>
                             <span>ZIP: ⭐⭐</span>
@@ -44,7 +45,7 @@
                     <div class="char-card" data-index="2">
                         <div class="avatar-box"><canvas id="canvas-coder" class="char-canvas" width="40" height="56"></canvas></div>
                         <div class="char-name">FRONTEND CODER</div>
-                        <div class="char-desc">Çok hızlıdır. SHIFT ile ileriye doğru kod atılımı (dash) yapar!</div>
+                        <div class="char-desc">Hızlı. SHIFT ile dash yapar!</div>
                         <div class="char-stats">
                             <span>HIZ: ⭐⭐⭐⭐</span>
                             <span>ZIP: ⭐⭐⭐</span>
@@ -54,61 +55,36 @@
                 </div>
             </div>
 
-            <div class="start-info">
-                <p class="blink-text">BAŞLAMAK İÇİN ENTER'A BAS</p>
-                <div class="controls-info">
-                    <span>⬅️➡️ / A-D Hareket</span>
-                    <span>⬆️ / SPACE Zıpla</span>
-                    <span>SHIFT Özel Yetenek</span>
-                </div>
-                <div class="start-highscore">🏆 EN YÜKSEK SKOR: <span id="start-highscore-value">0</span></div>
-            </div>
+            <!-- Two Column Info Area -->
+            <div class="start-columns-grid">
+                <!-- Left Column: Actions and Score -->
+                <div class="start-column-left">
+                    <p class="blink-text">BAŞLAMAK İÇİN ENTER'A BAS</p>
+                    
+                    <div class="controls-brief">
+                        <span class="control-brief-item">⬅️➡️/A-D: Hareket</span>
+                        <span class="control-brief-item">⬆️/SPACE: Zıpla</span>
+                        <span class="control-brief-item">SHIFT: Yetenek</span>
+                    </div>
 
-            <!-- Skills / Power-ups Info Panel -->
-            <div class="skills-panel">
-                <div class="skills-title">⚡ GÜÇLER &amp; YETENEKLer</div>
-                <div class="skills-grid">
-                    <div class="skill-item">
-                        <span class="skill-icon">📷</span>
-                        <div class="skill-info">
-                            <div class="skill-name">KAMERA</div>
-                            <div class="skill-desc">Dokunduğun her şeyi yener &amp; ölümsüzsün! 12s</div>
-                        </div>
+                    <div class="menu-action-buttons">
+                        <button id="btn-settings" class="menu-btn-retro">⚙️ AYARLAR</button>
+                        <button id="btn-sound-main" class="menu-btn-retro">🔊 SES</button>
                     </div>
-                    <div class="skill-item">
-                        <span class="skill-icon">☕</span>
-                        <div class="skill-info">
-                            <div class="skill-name">KAHVE</div>
-                            <div class="skill-desc">Havada 2. zıplama yapabilirsin! 18s</div>
-                        </div>
-                    </div>
-                    <div class="skill-item">
-                        <span class="skill-icon">🖱️</span>
-                        <div class="skill-info">
-                            <div class="skill-name">WACOM</div>
-                            <div class="skill-desc">Süper hız — rakipler sana yetişemez! 14s</div>
-                        </div>
-                    </div>
-                    <div class="skill-item">
-                        <span class="skill-icon">🤖</span>
-                        <div class="skill-info">
-                            <div class="skill-name">YAPAY ZEKA</div>
-                            <div class="skill-desc">Drone seni takip eder, düşmanları ateşle hedefler! 30s</div>
-                        </div>
-                    </div>
-                    <div class="skill-item">
-                        <span class="skill-icon">↩️</span>
-                        <div class="skill-info">
-                            <div class="skill-name">CTRL+Z (UNDO)</div>
-                            <div class="skill-desc">Bir öldürülmeyi geri alır — son güvenli noktana dönersin!</div>
-                        </div>
-                    </div>
-                    <div class="skill-item">
-                        <span class="skill-icon">🌀</span>
-                        <div class="skill-info">
-                            <div class="skill-name">GİZLİ GEÇİT</div>
-                            <div class="skill-desc">S / ⬇ ile portala gir, süre dolmadan SD topla!</div>
-                        </div>
+                    
+                    <div class="start-highscore">🏆 EN YÜKSEK SKOR: <span id="start-highscore-value">0</span></div>
+                </div>
+
+                <!-- Right Column: Compact Powers List -->
+                <div class="start-column-right">
+                    <h3 class="powers-brief-title">⚡ GÜÇLER &amp; YETENEKLER</h3>
+                    <div class="powers-brief-list">
+                        <div class="power-brief-item">📷 <strong>KAMERA:</strong> Ölümsüzlük &amp; Saldırı (12s)</div>
+                        <div class="power-brief-item">☕ <strong>KAHVE:</strong> Havada Çift Zıplama (18s)</div>
+                        <div class="power-brief-item">🖱️ <strong>WACOM:</strong> Süper Hız Artışı (14s)</div>
+                        <div class="power-brief-item">🤖 <strong>AI DRONE:</strong> Takipçi &amp; Otomatik Ateş (30s)</div>
+                        <div class="power-brief-item">↩️ <strong>CTRL+Z:</strong> Checkpoint'e Dönüş</div>
+                        <div class="power-brief-item">🌀 <strong>PORTAL:</strong> S/⬇ ile Gizli Boyuta Giriş</div>
                     </div>
                 </div>
             </div>
@@ -200,8 +176,55 @@
             </div>
             <p class="blink-text">DEVAM ETMEK İÇİN ENTER'A BAS</p>
         </div>
+
+        <!-- Settings Screen -->
+        <div id="settings-screen" class="screen hidden">
+            <h1 class="level-complete-title" style="color:#b388ff; text-shadow:0 0 20px rgba(179,136,255,0.8);">⚙️ AYARLAR</h1>
+            <p class="level-subtitle" style="font-size: 8px; line-height: 1.6; margin-bottom: 12px; color: #b0a3c4;">Kontrolleri değiştirmek için bir tuşa tıkla ve yeni tuşa bas.</p>
+            
+            <div class="settings-grid">
+                <div class="setting-row">
+                    <span>SOLA GİT</span>
+                    <button class="key-bind-btn" data-action="LEFT">ArrowLeft</button>
+                </div>
+                <div class="setting-row">
+                    <span>SAĞA GİT</span>
+                    <button class="key-bind-btn" data-action="RIGHT">ArrowRight</button>
+                </div>
+                <div class="setting-row">
+                    <span>ZIPLA</span>
+                    <button class="key-bind-btn" data-action="UP">ArrowUp</button>
+                </div>
+                <div class="setting-row">
+                    <span>AŞAĞI/PORTAL</span>
+                    <button class="key-bind-btn" data-action="DOWN">ArrowDown</button>
+                </div>
+                <div class="setting-row">
+                    <span>YETENEK</span>
+                    <button class="key-bind-btn" data-action="DASH">ShiftLeft</button>
+                </div>
+                <div class="setting-row">
+                    <span>ATEŞ ET</span>
+                    <button class="key-bind-btn" data-action="SHOOT">KeyX</button>
+                </div>
+            </div>
+            
+            <button id="btn-close-settings" class="menu-btn-retro" style="margin-top: 15px; padding: 10px 20px;">KAYDET VE DÖN</button>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pause-screen" class="screen hidden">
+            <h1 class="gameover-title" style="color:#00f0ff; text-shadow:0 0 20px #00f0ff; font-size: 32px;">DURAKLATILDI</h1>
+            
+            <div style="display:flex; flex-direction:column; gap: 10px; margin-top: 10px; width: 60%;">
+                <button id="btn-resume" class="menu-btn-retro" style="padding: 10px 15px; font-size: 11px;">▶️ DEVAM ET</button>
+                <button id="btn-restart" class="menu-btn-retro" style="padding: 10px 15px; font-size: 11px;">🔄 YENİDEN BAŞLAT</button>
+                <button id="btn-sound-pause" class="menu-btn-retro" style="padding: 10px 15px; font-size: 11px;">🔊 SES AÇ/KAPAT</button>
+                <button id="btn-mainmenu" class="menu-btn-retro" style="padding: 10px 15px; font-size: 11px;">🏠 ANA MENÜ</button>
+            </div>
+        </div>
     </div>
-    
+
     <script src="game.js"></script>
 </body>
 </html>

@@ -13,7 +13,7 @@ canvas.height = 640;
 // ==========================================
 // GAME STATE
 // ==========================================
-const GameState = { MENU: 'menu', INTRO: 'intro', OUTRO: 'outro', PLAYING: 'playing', GAMEOVER: 'gameover', LEVELCOMPLETE: 'levelcomplete', PORTAL: 'portal_transition' };
+const GameState = { MENU: 'menu', INTRO: 'intro', OUTRO: 'outro', PLAYING: 'playing', GAMEOVER: 'gameover', LEVELCOMPLETE: 'levelcomplete', PORTAL: 'portal_transition', PAUSED: 'paused', SETTINGS: 'settings' };
 let gameState = GameState.MENU;
 let score = 0;
 let sdCardsCollected = 0;
@@ -21,6 +21,24 @@ let lives = 3;
 let currentLevel = 1;
 let gameDeadlineTimer = 40000; // 40 seconds
 let highscore = parseInt(localStorage.getItem('designer_run_highscore') || '0');
+
+// Default Key Bindings
+let KeyBindings = {
+    LEFT: ['ArrowLeft', 'KeyA'],
+    RIGHT: ['ArrowRight', 'KeyD'],
+    UP: ['ArrowUp', 'KeyW', 'Space'],
+    DOWN: ['ArrowDown', 'KeyS'],
+    DASH: ['ShiftLeft', 'ShiftRight'],
+    SHOOT: ['KeyX', 'KeyC']
+};
+
+function isPressed(action) {
+    return KeyBindings[action].some(code => keys[code]);
+}
+
+function isJustPressed(action) {
+    return KeyBindings[action].some(code => justPressed[code]);
+}
 let cameraX = 0;
 let levelWidth = 6000;
 let particles = [];
@@ -724,13 +742,13 @@ document.addEventListener('keydown', (e) => {
     keys[e.code] = true;
 
     // Character selection menu controls
-    if (gameState === GameState.MENU) {
-        if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+    if (gameState === GameState.MENU || gameState === GameState.SETTINGS) {
+        if (isJustPressed('LEFT')) {
             selectedCharIndex = (selectedCharIndex - 1 + CHARACTERS.length) % CHARACTERS.length;
             updateCharacterSelectionUI();
             sound.init();
             sound.play('coin');
-        } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+        } else if (isJustPressed('RIGHT')) {
             selectedCharIndex = (selectedCharIndex + 1) % CHARACTERS.length;
             updateCharacterSelectionUI();
             sound.init();
@@ -738,20 +756,28 @@ document.addEventListener('keydown', (e) => {
         }
     }
 
-    // Shift key mapping for dash
-    if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
-        justPressed['Shift'] = true;
-    }
-
-    if (e.code === 'KeyX' || e.code === 'KeyC') {
+    if (isJustPressed('SHOOT')) {
         if (gameState === GameState.PLAYING && player.shootCooldown <= 0 && !player.isRespawning) {
             if (typeof bossActive !== 'undefined' && bossActive && player.bossAmmo > 0) {
                 player.shootCooldown = 250;
                 player.bossAmmo--;
-                playerProjectiles.push(new PlayerProjectile(player.x + player.width/2, player.y + 20, player.facing * 14));
+                playerProjectiles.push(new PlayerProjectile(player.x + player.width / 2, player.y + 20, player.facing * 14));
                 sound.play('jump');
                 if (typeof updateHUD === 'function') updateHUD();
             }
+        }
+    }
+
+    // Pause Game
+    if (e.code === 'Escape') {
+        if (gameState === GameState.PLAYING) {
+            gameState = GameState.PAUSED;
+            document.getElementById('pause-screen').classList.remove('hidden');
+        } else if (gameState === GameState.PAUSED) {
+            gameState = GameState.PLAYING;
+            document.getElementById('pause-screen').classList.add('hidden');
+        } else if (gameState === GameState.SETTINGS) {
+            closeSettings();
         }
     }
 
@@ -769,8 +795,15 @@ document.addEventListener('keydown', (e) => {
         else if (gameState === GameState.OUTRO) returnToMenu();
     }
 
+    // Restart key (R) during playing or paused
+    if ((gameState === GameState.PLAYING || gameState === GameState.PAUSED) && e.code === 'KeyR') {
+        document.getElementById('pause-screen').classList.add('hidden');
+        resetGame();
+        startGame();
+    }
+
     // --- CHEAT CODES (Numpad) ---
-    if (gameState === GameState.PLAYING && e.code.startsWith('Numpad')) {
+    if ((gameState === GameState.PLAYING || gameState === GameState.PAUSED) && e.code.startsWith('Numpad')) {
         const num = parseInt(e.code.replace('Numpad', ''));
         if (num === 0) {
             // Numpad 0: Sınırsız Can ve Süre (Infinite Health & Time)
@@ -793,9 +826,6 @@ document.addEventListener('keydown', (e) => {
 });
 document.addEventListener('keyup', (e) => {
     keys[e.code] = false;
-    if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
-        keys['Shift'] = false;
-    }
 });
 
 // ==========================================
@@ -877,13 +907,13 @@ class Player {
 
         // Trigger Shield if UI/UX Designer and Shift pressed (Currently Disabled per design)
         const isUIUX = CHARACTERS[selectedCharIndex].key === 'uiux';
-        if (isUIUX && justPressed['Shift'] && !this.shieldActive) {
+        if (isUIUX && isJustPressed('DASH') && !this.shieldActive) {
             // Disabled: UI/UX Designer has no active skill.
         }
 
         // Trigger Dash if Frontend Coder and Shift pressed
         const isCoder = CHARACTERS[selectedCharIndex].key === 'coder';
-        if (isCoder && justPressed['Shift'] && !this.isDashing) {
+        if (isCoder && isJustPressed('DASH') && !this.isDashing) {
             if (this.skillCharges > 0) {
                 this.skillCharges--;
                 this.isDashing = true;
@@ -898,7 +928,7 @@ class Player {
 
         // Trigger Stomp if 3D Modeler, in air, and S/DownArrow pressed
         const isModeler = CHARACTERS[selectedCharIndex].key === 'modeler';
-        if (isModeler && !this.grounded && (justPressed['KeyS'] || justPressed['ArrowDown']) && !this.isStomping) {
+        if (isModeler && !this.grounded && isJustPressed('DOWN') && !this.isStomping) {
             if (this.skillCharges > 0) {
                 this.skillCharges--;
                 this.isStomping = true;
@@ -924,8 +954,8 @@ class Player {
         } else {
             // Normal movement
             let moveX = 0;
-            if (keys['ArrowLeft'] || keys['KeyA']) moveX -= 1;
-            if (keys['ArrowRight'] || keys['KeyD']) moveX += 1;
+            if (isPressed('LEFT')) moveX -= 1;
+            if (isPressed('RIGHT')) moveX += 1;
 
             let spd = this.speed;
             if (powerUp.wacom > 0) spd = 8;
@@ -937,7 +967,7 @@ class Player {
             if (Math.abs(this.vx) < 0.15) this.vx = 0;
 
             // Jump
-            const jumpKey = justPressed['ArrowUp'] || justPressed['Space'] || justPressed['KeyW'];
+            const jumpKey = isJustPressed('UP');
             if (jumpKey && this.grounded) {
                 this.vy = this.jumpForce;
                 this.grounded = false;
@@ -958,7 +988,7 @@ class Player {
             }
 
             // Variable jump
-            if (!(keys['ArrowUp'] || keys['Space'] || keys['KeyW']) && this.vy < -7.5) this.vy = -7.5;
+            if (!isPressed('UP') && this.vy < -7.5) this.vy = -7.5;
 
             this.vy += this.gravity;
             if (this.vy > 15) this.vy = 15;
@@ -1797,20 +1827,20 @@ class Boss {
         if (dropChance < (this.phase2 ? 0.25 : 0.15)) {
             const dx = player.x - this.x;
             const dy = player.y - this.y;
-            const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-            this.projectiles.push(new BossProjectile(this.x + this.width/2, this.y + this.height/2, (dx/dist)*3, (dy/dist)*3, 'AMMO', '#00ff00', 'ammo'));
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            this.projectiles.push(new BossProjectile(this.x + this.width / 2, this.y + this.height / 2, (dx / dist) * 3, (dy / dist) * 3, 'AMMO', '#00ff00', 'ammo'));
         } else if (dropChance > 0.90) {
             const dx = player.x - this.x;
             const dy = player.y - this.y;
-            const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-            this.projectiles.push(new BossProjectile(this.x + this.width/2, this.y + this.height/2, (dx/dist)*3, (dy/dist)*3, 'CAN', '#ff00ff', 'health'));
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            this.projectiles.push(new BossProjectile(this.x + this.width / 2, this.y + this.height / 2, (dx / dist) * 3, (dy / dist) * 3, 'CAN', '#ff00ff', 'health'));
         }
 
         if (this.phase2 && rand < 0.4) {
             spawnFloatingText(this.x + this.width / 2, this.y - 10, 'REVİZE YAĞMURU!', '#ff0000');
             sound.play('boss_hit');
             screenShake = 15;
-            
+
             const numProjectiles = 9; // Azaltılmış mermi sayısı
             const gapIndex = Math.floor(Math.random() * (numProjectiles - 3));
             for (let i = 0; i < numProjectiles; i++) {
@@ -1819,20 +1849,20 @@ class Boss {
                 const speed = 3.0 + Math.random();
                 const vx = Math.cos(angle) * speed;
                 const vy = Math.abs(Math.sin(angle)) * speed + 1;
-                this.projectiles.push(new BossProjectile(this.x + this.width/2, this.y + this.height/2, vx, vy, 'REVIZE!', '#ff0000'));
+                this.projectiles.push(new BossProjectile(this.x + this.width / 2, this.y + this.height / 2, vx, vy, 'REVIZE!', '#ff0000'));
             }
         } else if (rand < 0.6) {
-            const dx = (player.x + player.width/2) - (this.x + this.width/2);
-            const dy = (player.y + player.height/2) - (this.y + this.height/2);
+            const dx = (player.x + player.width / 2) - (this.x + this.width / 2);
+            const dy = (player.y + player.height / 2) - (this.y + this.height / 2);
             const baseAngle = Math.atan2(dy, dx);
-            
+
             // Hedefe kilitli yan yana mermi atışı
             for (let i = -0.5; i <= 0.5; i += 1) { // 3 mermi yerine 2 mermi atacak
                 const angle = baseAngle + (i * 0.35);
                 const speed = this.phase2 ? 5.5 : 4.0;
                 const vx = Math.cos(angle) * speed;
                 const vy = Math.sin(angle) * speed;
-                this.projectiles.push(new BossProjectile(this.x + this.width/2, this.y + this.height/2, vx, vy, 'REVIZE!'));
+                this.projectiles.push(new BossProjectile(this.x + this.width / 2, this.y + this.height / 2, vx, vy, 'REVIZE!'));
             }
             sound.play('hit');
             spawnFloatingText(this.x + this.width / 2, this.y - 10, 'HEMEN DÜZELT!', '#ff4444');
@@ -1998,15 +2028,15 @@ class BossProjectile {
                     this.active = false;
                     player.bossAmmo += 3;
                     sound.play('coin');
-                    spawnParticles(this.x + this.width/2, this.y + this.height/2, 10, '#00ff00', 'sparkle');
+                    spawnParticles(this.x + this.width / 2, this.y + this.height / 2, 10, '#00ff00', 'sparkle');
                     if (typeof updateHUD === 'function') updateHUD();
                     return this.active;
                 } else if (this.projectileType === 'health') {
                     this.active = false;
                     lives++;
                     sound.play('powerup');
-                    spawnParticles(this.x + this.width/2, this.y + this.height/2, 15, '#ff00ff', 'burst');
-                    spawnFloatingText(this.x + this.width/2, this.y, '+1 CAN', '#ff00ff');
+                    spawnParticles(this.x + this.width / 2, this.y + this.height / 2, 15, '#ff00ff', 'burst');
+                    spawnFloatingText(this.x + this.width / 2, this.y, '+1 CAN', '#ff00ff');
                     if (typeof updateHUD === 'function') updateHUD();
                     return this.active;
                 }
@@ -2015,11 +2045,11 @@ class BossProjectile {
                 if (player.isDashing || player.shieldActive || isStomp) {
                     this.deflected = true;
                     if (typeof bossActive !== 'undefined' && bossActive && boss) {
-                        const dx = (boss.x + boss.width/2) - (this.x + this.width/2);
-                        const dy = (boss.y + boss.height/2) - (this.y + this.height/2);
-                        const dist = Math.sqrt(dx*dx + dy*dy);
-                        this.vx = (dx/dist) * 8;
-                        this.vy = (dy/dist) * 8;
+                        const dx = (boss.x + boss.width / 2) - (this.x + this.width / 2);
+                        const dy = (boss.y + boss.height / 2) - (this.y + this.height / 2);
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        this.vx = (dx / dist) * 8;
+                        this.vy = (dy / dist) * 8;
                     } else {
                         this.vx = -this.vx * 1.5;
                         this.vy = -this.vy * 1.5;
@@ -2269,7 +2299,7 @@ const LEVEL_DATA = [
             [4770, 510, 80], [4860, 480, 80]
         ],
         enemies: [
-            [200, 'walker'], [500, 'walker'],
+            [380, 'walker'], [520, 'walker'],
             [1000, 'walker'], [1200, 'walker'],
             [1650, 'walker'], [1800, 'walker'],
             [2350, 'walker'], [2550, 'jumper'],
@@ -2367,7 +2397,7 @@ const LEVEL_DATA = [
             [5770, 510, 70], [5860, 480, 70]
         ],
         enemies: [
-            [200, 'walker'], [400, 'walker'],
+            [380, 'walker'], [500, 'walker'],
             [900, 'walker'], [1000, 'jumper'],
             [1450, 'walker'], [1600, 'walker'],
             [2000, 'walker'], [2200, 'jumper'],
@@ -2497,7 +2527,7 @@ const LEVEL_DATA = [
             [6230, 510, 55, 'trampoline'], [6310, 470, 55]
         ],
         enemies: [
-            [200, 'walker'], [350, 'jumper'],
+            [300, 'walker'], [420, 'jumper'],
             [780, 'walker'], [900, 'jumper'],
             [1280, 'walker'], [1400, 'walker'],
             [1790, 'jumper'], [1900, 'walker'],
@@ -2632,7 +2662,7 @@ const LEVEL_DATA = [
             [6800, 460, 80, 'trampoline'], [6920, 360, 80, 'trampoline'], [7040, 260, 100, 'floating'], [7160, 360, 80, 'trampoline'], [7240, 460, 80, 'trampoline']
         ],
         enemies: [
-            [150, 'walker'], [300, 'jumper'],
+            [280, 'walker'], [380, 'jumper'],
             [730, 'walker'], [870, 'jumper'],
             [1180, 'walker'], [1320, 'walker'],
             [1630, 'jumper'], [1770, 'walker'],
@@ -2982,7 +3012,7 @@ function checkCollisions() {
     }
 
     // Portals (press down arrow to enter) - only if not already in secret dimension and portal is active (one-use only)
-    if (!inSecretDimension && (keys['ArrowDown'] || keys['KeyS'])) {
+    if (!inSecretDimension && isPressed('DOWN')) {
         for (const portal of portals) {
             if (!portal.active) continue;
             if (player.x + player.width > portal.x && player.x < portal.x + portal.width &&
@@ -3018,7 +3048,7 @@ function checkCollisions() {
                 score += 200;
                 gameDeadlineTimer += 3000;
                 sound.play('hit');
-                spawnParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, 15, '#00ff88', 'burst');
+                spawnParticles(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 15, '#00ff88', 'burst');
                 if (typeof updateHUD === 'function') updateHUD();
                 break;
             }
@@ -3588,6 +3618,8 @@ function updateHUD() {
             highscoreLabel.style.transform = 'scale(1.2)';
             setTimeout(() => highscoreLabel.style.transform = 'scale(1)', 150);
         }
+        const cabVal = document.getElementById('cabinet-highscore-value');
+        if (cabVal) cabVal.textContent = highscore.toString().padStart(5, '0');
     }
     const hudVal = document.getElementById('highscore-value');
     if (hudVal) hudVal.textContent = highscore;
@@ -3599,6 +3631,8 @@ function initHighScores() {
     if (startVal) startVal.textContent = highscore;
     const hudVal = document.getElementById('highscore-value');
     if (hudVal) hudVal.textContent = highscore;
+    const cabVal = document.getElementById('cabinet-highscore-value');
+    if (cabVal) cabVal.textContent = highscore.toString().padStart(5, '0');
 }
 
 function updateProgressBar() {
@@ -3989,16 +4023,16 @@ const OUTRO_SLIDES = [
             ctx.fillStyle = cbg; ctx.fillRect(0, 0, canvas.width, canvas.height);
             const groundY = canvas.height - 90;
             ctx.fillStyle = '#111'; ctx.fillRect(0, groundY, canvas.width, 90);
-            
+
             if (!this.notes) {
                 this.notes = [];
-                for(let i=0; i<40; i++) this.notes.push({x: Math.random()*canvas.width, y: groundY + Math.random()*80, c: ['#ffcc00','#ff66aa','#44eeff'][Math.floor(Math.random()*3)]});
+                for (let i = 0; i < 40; i++) this.notes.push({ x: Math.random() * canvas.width, y: groundY + Math.random() * 80, c: ['#ffcc00', '#ff66aa', '#44eeff'][Math.floor(Math.random() * 3)] });
             }
             this.notes.forEach(n => { ctx.fillStyle = n.c; ctx.fillRect(n.x, n.y, 10, 10); });
 
             ctx.save();
             ctx.translate(650, groundY - 10);
-            ctx.rotate(-Math.PI/2);
+            ctx.rotate(-Math.PI / 2);
             drawIntroEnemyAt(0, 0, 2.8);
             ctx.restore();
 
@@ -4022,8 +4056,8 @@ const OUTRO_SLIDES = [
 
             ctx.save();
             ctx.translate(650, groundY - 10);
-            ctx.rotate(-Math.PI/2);
-            const shake = Math.sin(t*0.05)*2;
+            ctx.rotate(-Math.PI / 2);
+            const shake = Math.sin(t * 0.05) * 2;
             drawIntroEnemyAt(0, shake, 2.8);
             ctx.restore();
 
@@ -4040,10 +4074,10 @@ const OUTRO_SLIDES = [
             drawIntroOfficeBg();
             const groundY = canvas.height - 90;
             const charXs = [320, 480, 640], charKeys = ['uiux', 'modeler', 'coder'];
-            
+
             if (!this.confetti) {
                 this.confetti = [];
-                for(let i=0; i<100; i++) this.confetti.push({x: Math.random()*canvas.width, y: -Math.random()*1000, vy: 3+Math.random()*4, c: ['#00ff00','#ffcc00','#ff00ff','#ffffff'][Math.floor(Math.random()*4)]});
+                for (let i = 0; i < 100; i++) this.confetti.push({ x: Math.random() * canvas.width, y: -Math.random() * 1000, vy: 3 + Math.random() * 4, c: ['#00ff00', '#ffcc00', '#ff00ff', '#ffffff'][Math.floor(Math.random() * 4)] });
             }
             this.confetti.forEach(c => {
                 c.y += c.vy;
@@ -4056,18 +4090,18 @@ const OUTRO_SLIDES = [
                 drawIntroChar(charKeys[i], charXs[i], groundY - bounce, 2.8, 1);
             }
 
-            const dropY = Math.min(canvas.height/2 - 40, -200 + t * 0.5);
+            const dropY = Math.min(canvas.height / 2 - 40, -200 + t * 0.5);
             ctx.save();
             ctx.textAlign = 'center';
             ctx.fillStyle = '#00ff88'; ctx.font = '32px "Press Start 2P",monospace';
             ctx.shadowColor = '#00ff00'; ctx.shadowBlur = 20;
-            ctx.fillText('ÖDEME ONAYLANDI!', canvas.width/2, dropY);
+            ctx.fillText('ÖDEME ONAYLANDI!', canvas.width / 2, dropY);
             ctx.fillStyle = '#fff'; ctx.font = '12px "Press Start 2P",monospace'; ctx.shadowBlur = 0;
-            ctx.fillText('Freelance Macerası Tamamlandı!', canvas.width/2, dropY + 40);
+            ctx.fillText('Freelance Macerası Tamamlandı!', canvas.width / 2, dropY + 40);
             ctx.restore();
 
             if (t > 2000 && t % 200 < 20) {
-                spawnParticles(canvas.width/2 + (Math.random()-0.5)*400, canvas.height/2 + (Math.random()-0.5)*200, 5, '#00ff88', 'sparkle');
+                spawnParticles(canvas.width / 2 + (Math.random() - 0.5) * 400, canvas.height / 2 + (Math.random() - 0.5) * 200, 5, '#00ff88', 'sparkle');
             }
         }
     }
@@ -4156,7 +4190,7 @@ function gameLoop(timestamp) {
     if (gameState === GameState.INTRO) {
         updateIntro(deltaTime);
     }
-    
+
     // Outro update
     if (gameState === GameState.OUTRO) {
         updateOutro(deltaTime);
@@ -4292,7 +4326,7 @@ function gameLoop(timestamp) {
     drawBackground();
     drawPlatforms();
 
-    if (gameState === GameState.PLAYING || gameState === GameState.LEVELCOMPLETE || gameState === GameState.PORTAL) {
+    if (gameState === GameState.PLAYING || gameState === GameState.LEVELCOMPLETE || gameState === GameState.PORTAL || gameState === GameState.PAUSED) {
         sdCards.forEach(c => c.draw());
         powerUps.forEach(p => p.draw());
         portals.forEach(p => p.draw());
@@ -4425,13 +4459,18 @@ function updateCharacterSelectionUI() {
 
 function drawMenuAvatars() {
     const ids = ['canvas-uiux', 'canvas-modeler', 'canvas-coder'];
-    const sprites = [playerSpritesData.uiux.idle[0], playerSpritesData.modeler.idle[0], playerSpritesData.coder.idle[0]];
+    const drawFuncs = [
+        (cx) => drawDesignerBase(cx, 0, 0, 0, false),
+        (cx) => drawModelerBase(cx, 0, 0, 0, false),
+        (cx) => drawCoderBase(cx, 0, 0, 0, false)
+    ];
     for (let i = 0; i < ids.length; i++) {
         const can = document.getElementById(ids[i]);
         if (can) {
             const ctx2 = can.getContext('2d');
             ctx2.clearRect(0, 0, can.width, can.height);
-            ctx2.drawImage(sprites[i], 0, 0);
+            // Draw directly onto the card canvas
+            drawFuncs[i](ctx2);
         }
     }
 }
@@ -4448,16 +4487,87 @@ function returnToMenu() {
     drawMenuAvatars();
 }
 
-// Bind character change button click listener
-const charChangeBtn = document.getElementById('char-change-btn');
-if (charChangeBtn) {
-    charChangeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (gameState !== GameState.MENU) {
-            returnToMenu();
-        }
-    });
+// Pause and Settings UI Logic
+document.getElementById('btn-settings')?.addEventListener('click', () => {
+    gameState = GameState.SETTINGS;
+    document.getElementById('settings-screen').classList.remove('hidden');
+});
+
+function closeSettings() {
+    gameState = GameState.MENU;
+    document.getElementById('settings-screen').classList.add('hidden');
 }
+
+document.getElementById('btn-close-settings')?.addEventListener('click', closeSettings);
+
+document.getElementById('btn-sound-main')?.addEventListener('click', () => { sound.toggleMute(); });
+document.getElementById('btn-sound-pause')?.addEventListener('click', () => { sound.toggleMute(); });
+
+document.getElementById('btn-resume')?.addEventListener('click', () => {
+    gameState = GameState.PLAYING;
+    document.getElementById('pause-screen').classList.add('hidden');
+});
+
+document.getElementById('btn-restart')?.addEventListener('click', () => {
+    document.getElementById('pause-screen').classList.add('hidden');
+    resetGame();
+    startGame();
+});
+
+document.getElementById('btn-mainmenu')?.addEventListener('click', () => {
+    document.getElementById('pause-screen').classList.add('hidden');
+    returnToMenu();
+});
+
+// Key bindings setup
+let listeningForBind = null;
+document.querySelectorAll('.key-bind-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        // Clear listening state from all other buttons
+        document.querySelectorAll('.key-bind-btn').forEach(b => {
+            b.classList.remove('listening');
+            b.textContent = KeyBindings[b.dataset.action][0];
+        });
+
+        btn.classList.add('listening');
+        btn.textContent = 'TUŞ BEKLENİYOR...';
+        listeningForBind = btn.dataset.action;
+        e.stopPropagation();
+    });
+});
+
+document.addEventListener('keydown', (e) => {
+    if (listeningForBind && e.code !== 'Escape') {
+        KeyBindings[listeningForBind] = [e.code]; // Overwrite default with new primary key
+        const btn = document.querySelector(`.key-bind-btn[data-action="${listeningForBind}"]`);
+        if (btn) {
+            btn.classList.remove('listening');
+            btn.textContent = e.code;
+        }
+        listeningForBind = null;
+    } else if (listeningForBind && e.code === 'Escape') {
+        // Cancel binding
+        const btn = document.querySelector(`.key-bind-btn[data-action="${listeningForBind}"]`);
+        if (btn) {
+            btn.classList.remove('listening');
+            btn.textContent = KeyBindings[listeningForBind][0];
+        }
+        listeningForBind = null;
+    }
+});
+
+// Register Character Selection Card Click Event Listeners
+document.querySelectorAll('.char-card').forEach((card) => {
+    card.addEventListener('click', () => {
+        const idx = parseInt(card.dataset.index);
+        selectedCharIndex = idx;
+        updateCharacterSelectionUI();
+        drawMenuAvatars();
+        sound.init();
+        sound.play('coin');
+    });
+});
+
 
 initHighScores();
 updateCharacterSelectionUI();
