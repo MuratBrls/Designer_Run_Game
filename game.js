@@ -4228,9 +4228,26 @@ function drawOutro() {
 // ==========================================
 // MAIN LOOP
 // ==========================================
+const TARGET_FPS = 60;
+const FRAME_DURATION = 1000 / TARGET_FPS;
+
 function gameLoop(timestamp) {
-    deltaTime = timestamp - lastTime;
-    lastTime = timestamp;
+    requestAnimationFrame(gameLoop);
+
+    if (!lastTime) {
+        lastTime = timestamp;
+    }
+    const elapsed = timestamp - lastTime;
+    
+    // Throttle the loop to target FPS
+    if (elapsed < FRAME_DURATION) {
+        return;
+    }
+
+    // Keep track of remainder to avoid drift
+    lastTime = timestamp - (elapsed % FRAME_DURATION);
+
+    deltaTime = elapsed;
     if (deltaTime > 50) deltaTime = 50;
     gameTime += deltaTime;
 
@@ -4378,7 +4395,6 @@ function gameLoop(timestamp) {
     if (gameState === GameState.INTRO) {
         drawIntro();
         ctx.restore();
-        requestAnimationFrame(gameLoop);
         return;
     }
 
@@ -4386,7 +4402,6 @@ function gameLoop(timestamp) {
     if (gameState === GameState.OUTRO) {
         drawOutro();
         ctx.restore();
-        requestAnimationFrame(gameLoop);
         return;
     }
 
@@ -4513,7 +4528,6 @@ function gameLoop(timestamp) {
     for (const k in justPressed) justPressed[k] = false;
 
     ctx.restore();
-    requestAnimationFrame(gameLoop);
 }
 
 function updateCharacterSelectionUI() {
