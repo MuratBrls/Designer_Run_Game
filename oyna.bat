@@ -1,7 +1,7 @@
 @echo off
 title Designer Run - Launcher
 echo ====================================
-2echo      DESIGNER RUN LAUNCHER
+echo      DESIGNER RUN LAUNCHER
 echo ====================================
 echo.
 

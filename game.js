@@ -20,6 +20,8 @@ let sdCardsCollected = 0;
 let lives = 3;
 let currentLevel = 1;
 let gameDeadlineTimer = 40000; // 40 seconds
+let levelTimeSpent = 0;
+let totalTimeSpent = 0;
 let highscore = parseInt(localStorage.getItem('designer_run_highscore') || '0');
 
 // Default Key Bindings
@@ -1240,6 +1242,7 @@ class Player {
             if (gameoverSubtitle) gameoverSubtitle.textContent = isTimeout ? 'Deadline kaçırıldı! ⏰' : 'Müşteriler kazandı! 😭';
             document.getElementById('final-score').textContent = score;
             document.getElementById('final-sdcards').textContent = sdCardsCollected;
+            document.getElementById('final-time').textContent = formatTimeSpent(totalTimeSpent);
 
             // High score checks
             document.getElementById('gameover-highscore-value').textContent = highscore;
@@ -2808,6 +2811,7 @@ const LEVEL_DATA = [
 // LEVEL LOADER
 // ==========================================
 function loadLevel(levelNum) {
+    levelTimeSpent = 0;
     if (levelNum > 1 && levelNum % 5 === 0) {
         lives += 2;
         // Play powerup chiptune sound
@@ -3517,6 +3521,8 @@ function startGame() {
     lives = char.maxLives;
     currentLevel = 1;
     gameDeadlineTimer = 40000; // 40 seconds
+    levelTimeSpent = 0;
+    totalTimeSpent = 0;
     cameraX = 0;
     bossActive = false;
     boss = null;
@@ -3582,6 +3588,7 @@ function levelComplete() {
     showScreen('levelcomplete-screen');
     document.getElementById('level-score').textContent = score;
     document.getElementById('level-sdcards').textContent = sdCardsCollected;
+    document.getElementById('level-time').textContent = formatTimeSpent(levelTimeSpent);
 }
 
 function nextLevel() {
@@ -3600,6 +3607,7 @@ function nextLevel() {
 
         document.getElementById('final-score').textContent = score;
         document.getElementById('final-sdcards').textContent = sdCardsCollected;
+        document.getElementById('final-time').textContent = formatTimeSpent(totalTimeSpent);
 
         const mulMsg = document.getElementById('score-multiplier-msg');
         if (mulMsg) {
@@ -3643,6 +3651,17 @@ function showScreen(id) {
     if (prog) prog.classList.add('hidden');
 }
 function hideAllScreens() { ['start-screen', 'gameover-screen', 'levelcomplete-screen'].forEach(id => document.getElementById(id).classList.add('hidden')); }
+
+function formatTimeSpent(msValue) {
+    const totalSecs = Math.floor(msValue / 1000);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    if (mins > 0) {
+        return `${mins} dakika ${secs} saniye`;
+    }
+    const tenths = Math.floor((msValue % 1000) / 100);
+    return `${secs}.${tenths} saniye`;
+}
 let previousScore = 0;
 let previousLives = 3;
 
@@ -4283,6 +4302,8 @@ function gameLoop(timestamp) {
     if (gameState === GameState.PLAYING) {
         // Global Deadline Timer
         gameDeadlineTimer -= deltaTime;
+        levelTimeSpent += deltaTime;
+        totalTimeSpent += deltaTime;
         if (gameDeadlineTimer <= 0) {
             gameDeadlineTimer = 0;
             lives = 0; // Force game over
@@ -4668,6 +4689,11 @@ document.querySelectorAll('.char-card').forEach((card) => {
         sound.init();
         sound.play('coin');
     });
+});
+
+// Register Character Selection Return Button Click Event Listener
+document.getElementById('char-change-btn')?.addEventListener('click', () => {
+    returnToMenu();
 });
 
 
